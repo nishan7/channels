@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .jumbotron {
+            padding: 4rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: .3rem;
+        }
+
+        .normal {
+            padding: 1rem .5rem;
+            margin-bottom: .5rem;
+        }
+    </style>
+</head>
+
+<body>
+<h1 class="jumbotron"> Hi {{ user }}</h1>
+
+{% for u in users %}
+    <h2 class="normal">Chat with <a href="/chat/{{ u.id }}">{{ u.username }}</a></h2>
+{% endfor %}
+</body>
+</html>

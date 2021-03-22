@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+<h1>Hello {{ user }}, your are chatting with {{ receiver.username }}</h1>
+<div class="container m-5">
+    <textarea class="form-control rounded-0 " id="chat-log" rows="20"></textarea><br>
+    <input id="chat-message-input" class="form-control" type="text" size="100"><br>
+    <input id="chat-message-submit" class="btn btn-primary m-0 pb-1 pt-1" type="button" value="Send">
+    {{ room_name|json_script:"room-name" }}
+    <script>
+        {% for message in older_messages %}
+            {#console.log({{ message.id }})#}
+            {% if message.sender == sender %}
+                document.querySelector('#chat-log').value += ("{{ sender.username }} : " + "{{ message.message }}" + "  {{ message.timestamp | date:"g:i A" }}" + '\n');
+
+            {% else %}
+                document.querySelector('#chat-log').value += ("{{ receiver.username }} : " + "{{ message.message }}" + "  {{ message.timestamp | date:"g:i A" }}" + '\n');
+            {% endif %}
+
+        {% endfor %}
+
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + "{{ roomname }}/"
+        );
+
+        // Receive the message from websocket
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data)
+            let sender_username = data.sender_username
+            document.querySelector('#chat-log').value += (sender_username + " : " + data.message + "  " + data.timestamp + '\n');
+        };
+
+
+        chatSocket.onclose = function (e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function (e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        // Send a message to websocket
+        document.querySelector('#chat-message-submit').onclick = function (e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                "sender_userid": "{{ sender.id }}",
+                "receiver_userid": "{{ receiver.id }}"
+            }));
+            messageInputDom.value = '';
+
+        };
+    </script>
+</div>
+</body>
+
+</html>
